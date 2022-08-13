@@ -45,7 +45,7 @@ def load_audio_file(input_fpath, src_path):
         logging.error(f"> error in loading file")
 
 
-def create_audio_chunks(source_path, temp_path, chunk_length=30):
+def create_audio_chunks(source_path, temp_path):
     """create audio chunks"""
     try:
         # create chunks
@@ -54,7 +54,7 @@ def create_audio_chunks(source_path, temp_path, chunk_length=30):
             audio_filename = audio_file_paths[0]
 
         sound = AudioSegment.from_file(os.path.join(source_path, audio_filename))
-        # audio_chunks = make_chunks(sound, chunk_length * 1000)
+        # audio_chunks = make_chunks(sound, 30 * 1000)
         audio_chunks = split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500)
 
         for count, chunk in enumerate(audio_chunks):
