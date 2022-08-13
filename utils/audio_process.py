@@ -30,8 +30,10 @@ def load_audio_file(input_fpath, src_path):
             sound = AudioSegment.from_file(input_fpath, "3gp")
             sound.export(out_f=os.path.join(src_path, "3gp.wav"), format="wav")
 
+        sound.set_frame_rate(16000)
         duration = sound.duration_seconds
-        logging.info(f"audio file duration - {str(duration)} s")
+
+        logging.info(f"audio file duration - {str(duration)}s with frame rate - {str(sound.frame_rate)}")
     except Exception as e:
         logging.error(f"> error in loading file")
 
