@@ -1,3 +1,8 @@
+import librosa
+import torch
+from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+from .constants import wav2vec2_model_dir
+
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 
@@ -55,3 +60,30 @@ def create_audio_chunks(source_path, temp_path, chunk_length=30):
                 chunk.export(out_f, format="wav")
     except Exception as e:
         logging.error(f"> error in creating audio chunks")
+
+
+def get_audio_transcription(temp_path):
+    """get audio transcriptions"""
+    try:
+        tokenizer = Wav2Vec2Tokenizer.from_pretrained("/Users/hyderali/PycharmProjects/docs-archives/models/wav2vec2-base-960h" , local_files_only=True)
+        model = Wav2Vec2ForCTC.from_pretrained("/Users/hyderali/PycharmProjects/docs-archives/models/wav2vec2-base-960h" , local_files_only=True)
+
+        collection_of_text = []
+
+        for f_path in os.listdir(temp_path):
+            speech, rate = librosa.load(os.path.join(temp_path, f_path), sr=16000)
+            input_values = tokenizer(speech, return_tensors='pt').input_values
+
+            with torch.no_grad():
+                logits = model(input_values).logits
+
+            predicted_ids = torch.argmax(logits, dim=-1)
+            transcription = tokenizer.batch_decode(predicted_ids)[0]
+            print(transcription)
+            collection_of_text.append(transcription)
+
+        return collection_of_text
+
+    except Exception as e:
+        logging.error(f"> error in transcribing audio chunks")
+        return ""
