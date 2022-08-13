@@ -5,8 +5,10 @@ from .constants import wav2vec2_model_dir
 
 from pydub import AudioSegment
 from pydub.utils import make_chunks
+from pydub.silence import split_on_silence
 
 import os
+import json
 import logging
 
 
@@ -52,7 +54,8 @@ def create_audio_chunks(source_path, temp_path, chunk_length=30):
             audio_filename = audio_file_paths[0]
 
         sound = AudioSegment.from_file(os.path.join(source_path, audio_filename))
-        audio_chunks = make_chunks(sound, chunk_length * 1000)
+        # audio_chunks = make_chunks(sound, chunk_length * 1000)
+        audio_chunks = split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500)
 
         for count, chunk in enumerate(audio_chunks):
             output_fpath = os.path.join(temp_path, f"{count}_audio_file.wav")
@@ -62,15 +65,18 @@ def create_audio_chunks(source_path, temp_path, chunk_length=30):
         logging.error(f"> error in creating audio chunks")
 
 
-def get_audio_transcription(temp_path):
+def get_audio_transcription(temp_path, target_path):
     """get audio transcriptions"""
     try:
-        tokenizer = Wav2Vec2Tokenizer.from_pretrained("/Users/hyderali/PycharmProjects/docs-archives/models/wav2vec2-base-960h" , local_files_only=True)
-        model = Wav2Vec2ForCTC.from_pretrained("/Users/hyderali/PycharmProjects/docs-archives/models/wav2vec2-base-960h" , local_files_only=True)
+        tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
+        model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True)
 
         collection_of_text = []
 
-        for f_path in os.listdir(temp_path):
+        fpath_list = os.listdir(temp_path)
+        fpath_list_sorted = sorted(fpath_list, key=lambda x: int(os.path.splitext(x)[0].split("_")[0]))
+
+        for f_path in fpath_list_sorted:
             speech, rate = librosa.load(os.path.join(temp_path, f_path), sr=16000)
             input_values = tokenizer(speech, return_tensors='pt').input_values
 
@@ -79,10 +85,16 @@ def get_audio_transcription(temp_path):
 
             predicted_ids = torch.argmax(logits, dim=-1)
             transcription = tokenizer.batch_decode(predicted_ids)[0]
-            print(transcription)
+            transcription = transcription.lower()
             collection_of_text.append(transcription)
 
-        return collection_of_text
+        text = " ".join(collection_of_text)
+        text_dict = {"output_text": text}
+
+        with open(os.path.join(target_path, "output.json"), "w") as outfile:
+            json.dump(text_dict, outfile)
+
+        return text
 
     except Exception as e:
         logging.error(f"> error in transcribing audio chunks")

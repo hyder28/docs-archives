@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# files and folders
 source_dir_name = Path("src/")
 temp_dir_name = Path("tmp/")
 output_dir_name = Path("output/")
