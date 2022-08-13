@@ -5,38 +5,46 @@ import os
 import logging
 
 
-def load_audio_file(source_path, target_path):
+def load_audio_file(input_fpath, src_path):
     """load audio file"""
     try:
+        logging.info(f"audio file path - {str(input_fpath)}")
         sound = None
-        if source_path.endswith('.mp3') or source_path.endswith('.MP3'):
-            sound = AudioSegment.from_mp3(source_path)
-        elif source_path.endswith('.wav') or source_path.endswith('.WAV'):
-            sound = AudioSegment.from_wav(source_path)
-        elif source_path.endswith('.ogg'):
-            sound = AudioSegment.from_ogg(source_path)
-        elif source_path.endswith('.flac'):
-            sound = AudioSegment.from_file(source_path, "flac")
-        elif source_path.endswith('.3gp'):
-            sound = AudioSegment.from_file(source_path, "3gp")
-        elif source_path.endswith('.3g'):
-            sound = AudioSegment.from_file(source_path, "3gp")
 
-        sound.export(target_path, "wav")
+        if input_fpath.endswith('.mp3') or input_fpath.endswith('.MP3'):
+            sound = AudioSegment.from_mp3(input_fpath)
+            sound.export(out_f=os.path.join(src_path, "mp3_file.wav"), format="wav")
+        elif input_fpath.endswith('.wav') or input_fpath.endswith('.WAV'):
+            sound = AudioSegment.from_wav(input_fpath)
+            sound.export(out_f=os.path.join(src_path, "wav_file.wav"), format="wav")
+        elif input_fpath.endswith('.ogg'):
+            sound = AudioSegment.from_ogg(input_fpath)
+            sound.export(out_f=os.path.join(src_path, "ogg_file.wav"), format="wav")
+        elif input_fpath.endswith('.flac'):
+            sound = AudioSegment.from_file(input_fpath, "flac")
+            sound.export(out_f=os.path.join(src_path, "flac_file.wav"), format="wav")
+        elif input_fpath.endswith('.3gp'):
+            sound = AudioSegment.from_file(input_fpath, "3gp")
+            sound.export(out_f=os.path.join(src_path, "3gp_file.wav"), format="wav")
+        elif input_fpath.endswith('.3g'):
+            sound = AudioSegment.from_file(input_fpath, "3gp")
+            sound.export(out_f=os.path.join(src_path, "3gp.wav"), format="wav")
+
         duration = sound.duration_seconds
-
-        return sound, duration
+        logging.info(f"audio file duration - {str(duration)} s")
     except Exception as e:
         logging.error(f"> error in loading file")
-
-        return None, None
 
 
 def create_audio_chunks(source_path, temp_path, chunk_length=30):
     """create audio chunks"""
     try:
         # create chunks
-        sound = AudioSegment.from_file(source_path)
+        audio_file_paths = os.listdir(source_path)
+        if len(audio_file_paths) == 1:
+            audio_filename = audio_file_paths[0]
+
+        sound = AudioSegment.from_file(os.path.join(source_path, audio_filename))
         audio_chunks = make_chunks(sound, chunk_length * 1000)
 
         for count, chunk in enumerate(audio_chunks):
@@ -45,5 +53,3 @@ def create_audio_chunks(source_path, temp_path, chunk_length=30):
                 chunk.export(out_f, format="wav")
     except Exception as e:
         logging.error(f"> error in creating audio chunks")
-
-
