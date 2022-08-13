@@ -2,13 +2,48 @@ from .audio_process import *
 from .file_process import *
 from .constants import *
 
+from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+import librosa
+import torch
+import json
 
-def process_audio_file(input_fpath):
-    """transcribe text from an input fpath"""
-    process_clean_all_folders()
-    load_audio_file(input_fpath, source_dir_name)
-    create_audio_chunks(source_dir_name, temp_dir_name)
+class Wav2Vec2:
+    """Wav2Vec2 for ASR"""
+    def __init__(self):
+        self.tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
+        self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True)
 
-    text = get_audio_transcription(temp_dir_name, output_dir_name)
+    def transcribe_text(self, input_fpath):
+        process_clean_all_folders()
 
-    return text
+        # audio files processing
+        load_audio_file(input_fpath, source_dir_name)
+        create_audio_chunks(source_dir_name, temp_dir_name)
+
+        fpath_list = os.listdir(temp_dir_name)
+        fpath_list_sorted = sorted(fpath_list, key=lambda x: int(os.path.splitext(x)[0].split("_")[0]))
+
+        collection_of_text = []
+
+        for f_path in fpath_list_sorted:
+            try:
+                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr=16000)
+                input_values = self.tokenizer(speech, return_tensors='pt').input_values
+
+                with torch.no_grad():
+                    logits = self.model(input_values).logits
+
+                predicted_ids = torch.argmax(logits, dim=-1)
+                transcription = self.tokenizer.batch_decode(predicted_ids)[0]
+                transcription = transcription.lower()
+                collection_of_text.append(transcription)
+            except Exception as e:
+                logging.error(f"> error in transcribing {f_path}")
+
+        text = " ".join(collection_of_text)
+        text_dict = {"output_text": text}
+
+        with open(os.path.join(output_dir_name, "output.json"), "w") as outfile:
+            json.dump(text_dict, outfile)
+
+        return text
