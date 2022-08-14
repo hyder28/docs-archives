@@ -5,10 +5,21 @@ from .constants import *
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 import librosa
 import torch
+import spacy
 import json
 
+class SpacySM:
+    """spacy en-core-web-sm-3.4.0"""
+    def __init__(self):
+        self.nlp = spacy.load(spacy_model_dir)
+
+    def get_topic(self, text):
+        doc = self.nlp(text)
+
+        return [(token.text, token.pos_, token.dep_) for token in doc]
+
 class Wav2Vec2:
-    """Wav2Vec2 for ASR"""
+    """wav2vec2 for asr"""
     def __init__(self):
         self.tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
         self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True)
