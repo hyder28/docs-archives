@@ -30,6 +30,7 @@ def load_audio_file(input_fpath, src_path):
             sound = AudioSegment.from_file(input_fpath, "3gp")
             sound.export(out_f=os.path.join(src_path, "3gp.wav"), format="wav")
 
+        sound.set_channels(1)
         sound.set_frame_rate(16000)
         duration = sound.duration_seconds
 
