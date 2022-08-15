@@ -1,6 +1,7 @@
 from .audio_process import *
 from .file_process import *
 from .constants import *
+from .verify_torch import *
 
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 import librosa
@@ -10,6 +11,7 @@ from spacy.matcher import Matcher
 import collections
 import json
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class SpacySM:
     """spacy en-core-web-sm-3.4.0"""
@@ -49,7 +51,7 @@ class Wav2Vec2:
 
     def __init__(self):
         self.tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
-        self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True)
+        self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True).to(device)
 
     def transcribe_text(self, input_fpath):
         process_clean_all_folders()
@@ -65,8 +67,8 @@ class Wav2Vec2:
 
         for f_path in fpath_list_sorted:
             try:
-                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr=16000)
-                input_values = self.tokenizer(speech, return_tensors='pt').input_values
+                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr = 16000)
+                input_values = self.tokenizer(speech, return_tensors='pt', device = device).input_values
 
                 with torch.no_grad():
                     logits = self.model(input_values).logits

@@ -14,6 +14,6 @@ spacy_model_dir = "models/en_core_web_sm-3.4.0"
 # keywords
 keywords_dict = \
     {
-        "PERSON": ["hyder", "ali"],
-        "LOCATION": ["singapore", "eunos"]
+        "PEOPLE N MANAGEMENT": ["Piyush Gupta", "Tan Su Shan"],
+        "TECHNOLOGY": ["Bitcoins", "CPF Investment Account"]
     }
