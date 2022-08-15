@@ -8,6 +8,11 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(filename="app.log", level=logging.INFO)
 
 """
+Packages:
+spacy, transformers, librosa
+"""
+
+"""
 1. wav2vec2 model - transcribe audio
 """
 input_data_dir = "data/audio"
