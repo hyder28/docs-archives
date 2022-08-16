@@ -6,45 +6,53 @@ from .verify_torch import *
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 import librosa
 import torch
+
 import spacy
-from spacy.matcher import Matcher
+from spacy.matcher import PhraseMatcher
+import pysbd
+
 import collections
 import json
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class SpacySM:
     """spacy en-core-web-sm-3.4.0"""
 
     def __init__(self):
         self.nlp = spacy.load(spacy_model_dir)
-        self.matcher = Matcher(self.nlp.vocab)
+        self.matcher = PhraseMatcher(self.nlp.vocab)
+        self.seg = pysbd.Segmenter(language = "en", clean = True)
 
-    def get_topic(self, text):
+    def get_topic(self, text_content):
         try:
-            text = text.lower()
+            for label_class, keyword_list in keywords_lookup.items():
+                patterns = [self.nlp.make_doc(term) for term in keyword_list] + [self.nlp.make_doc(term.lower()) for
+                                                                                 term in keyword_list]
+                self.matcher.add(label_class, patterns)
 
-            for keyword_class, keyword_list in keywords_dict.items():
-                for key_word in keyword_list:
-                    pattern = [{"LOWER": key_word}]
-                    self.matcher.add(keyword_class, [pattern])
+            sents_list = self.seg.segment(text_content)
 
-            doc = self.nlp(text)
-            matches = self.matcher(doc)
+            tagged_keywords = []
+            for sent in sents_list:
+                if 0 < len(sent) < self.nlp.max_length:
+                    doc = self.nlp(sent)
+                    matches = self.matcher(doc)
 
-            result_list = []
-            for match_id, start, end in matches:
-                rule_id = self.nlp.vocab.strings[match_id]
-                span = doc[start:end]
+                    for match_id, start, end in matches:
+                        rule_id = self.nlp.vocab.strings[match_id]
+                        span = doc[start:end]
 
-                result_list.append((rule_id, span.text))
+                        tagged_keywords.append((rule_id, span.text))
 
-            ctr = collections.Counter(result_list)
+            ctr = dict(collections.Counter(tagged_keywords).most_common(3))
 
-            return ctr
+            return {"ARTICLE_TOPIC": str(ctr), "ARTICLE_TEXT": text_content}
         except Exception as e:
-            logging.error(f"> error in text topic extraction")
+            logging.error(f"> error in text topic extraction {f_path}")
             return {}
+
 
 class Wav2Vec2:
     """wav2vec2 for asr"""
@@ -67,8 +75,8 @@ class Wav2Vec2:
 
         for f_path in fpath_list_sorted:
             try:
-                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr = 16000)
-                input_values = self.tokenizer(speech, return_tensors='pt', device = device).input_values
+                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr=16000)
+                input_values = self.tokenizer(speech, return_tensors='pt', device=device).input_values
 
                 with torch.no_grad():
                     logits = self.model(input_values).logits
