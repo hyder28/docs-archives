@@ -40,19 +40,15 @@ def load_audio_file(input_fpath, src_path):
         logging.error(f"> error in loading file")
 
 
-def create_audio_chunks(source_path, temp_path):
+def create_audio_chunks(source_path, temp_path, max_length=30 * 1000):
     """create audio chunks"""
     try:
-        # create chunks
         audio_file_paths = os.listdir(source_path)
         if len(audio_file_paths) == 1:
             audio_filename = audio_file_paths[0]
-        # todo - handle exceptions here correctly
 
         sound = AudioSegment.from_file(os.path.join(source_path, audio_filename))
-
         audio_chunks = []
-        max_length = 30 * 1000
 
         for chunk in split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500):
             if len(chunk) < max_length:
@@ -61,10 +57,8 @@ def create_audio_chunks(source_path, temp_path):
                 audio_chunks += make_chunks(chunk, max_length)
 
         for count, chunk in enumerate(audio_chunks):
-            print(len(chunk) / 1000)
             output_fpath = os.path.join(temp_path, f"{count}_audio_file.wav")
             with open(output_fpath, "wb") as out_f:
                 chunk.export(out_f, format="wav")
     except Exception as e:
         logging.error(f"> error in creating audio chunks")
-
