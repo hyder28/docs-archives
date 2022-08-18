@@ -1,6 +1,7 @@
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from pydub.utils import make_chunks
+from pydub.effects import low_pass_filter
 
 import os
 import logging
@@ -31,11 +32,11 @@ def load_audio_file(input_fpath, src_path):
             sound = AudioSegment.from_file(input_fpath, "3gp")
             sound.export(out_f=os.path.join(src_path, "3gp.wav"), format="wav")
 
-        sound.set_channels(1)
-        sound.set_frame_rate(16000)
-        duration = sound.duration_seconds
+        sound = low_pass_filter(sound, 300)
+        sound = sound.set_frame_rate(16000)
 
-        logging.info(f"audio file duration - {str(duration)}s with frame rate - {str(sound.frame_rate)}")
+        logging.info(
+            f"source: {str(input_fpath)}, duration: {str(sound.duration_seconds)}s, frame rate: {str(sound.frame_rate)}, channels: {str(sound.channels)}")
     except Exception as e:
         logging.error(f"> error in loading file")
 
@@ -51,6 +52,8 @@ def create_audio_chunks(source_path, temp_path, max_length=30 * 1000):
         audio_chunks = []
 
         for chunk in split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500):
+            # chunk = chunk.low_pass_filter(300)
+
             if len(chunk) < max_length:
                 audio_chunks.append(chunk)
             else:

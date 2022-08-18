@@ -84,6 +84,9 @@ class Wav2Vec2:
                 predicted_ids = torch.argmax(logits, dim=-1)
                 transcription = self.tokenizer.batch_decode(predicted_ids)[0]
                 transcription = transcription.lower()
+                #todo - remove print statement
+                print(f"transcription: {transcription}")
+
                 collection_of_text.append(transcription)
             except Exception as e:
                 logging.error(f"> error in transcribing {f_path}")
