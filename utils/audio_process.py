@@ -52,8 +52,6 @@ def create_audio_chunks(source_path, temp_path, max_length=30 * 1000):
         audio_chunks = []
 
         for chunk in split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500):
-            # chunk = chunk.low_pass_filter(300)
-
             if len(chunk) < max_length:
                 audio_chunks.append(chunk)
             else:
