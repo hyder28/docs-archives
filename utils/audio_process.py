@@ -6,7 +6,6 @@ from pydub.effects import low_pass_filter
 import os
 import logging
 
-
 def load_audio_file(input_fpath, src_path):
     """load audio file"""
     try:
@@ -38,7 +37,7 @@ def load_audio_file(input_fpath, src_path):
         logging.info(
             f"source: {str(input_fpath)}, duration: {str(sound.duration_seconds)}s, frame rate: {str(sound.frame_rate)}, channels: {str(sound.channels)}")
     except Exception as e:
-        logging.error(f"> error in loading file")
+        logging.error(f"> error in loading file: {e}")
 
 
 def create_audio_chunks(source_path, temp_path, max_length=30 * 1000):
@@ -62,4 +61,4 @@ def create_audio_chunks(source_path, temp_path, max_length=30 * 1000):
             with open(output_fpath, "wb") as out_f:
                 chunk.export(out_f, format="wav")
     except Exception as e:
-        logging.error(f"> error in creating audio chunks")
+        logging.error(f"> error in creating audio chunks: {e}")
