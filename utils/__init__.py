@@ -50,7 +50,7 @@ class SpacySM:
 
             return {"ARTICLE_TOPIC": str(ctr), "ARTICLE_TEXT": text_content}
         except Exception as e:
-            logging.error(f"> error in text topic extraction {f_path}")
+            logging.error(f"> error in text topic extraction {f_path}: {e}")
             return {}
 
 

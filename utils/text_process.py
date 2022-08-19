@@ -22,5 +22,5 @@ def get_topic_keywords(text_content):
         return {"ARTICLE_TOPIC": str(ctr), "ARTICLE_TEXT": text_content}
 
     except Exception as e:
-        logging.error(f"> error in text topic extraction by keywords")
+        logging.error(f"> error in text topic extraction by keywords: {e}")
         return {}
