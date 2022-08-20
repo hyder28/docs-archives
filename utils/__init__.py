@@ -61,12 +61,11 @@ class Wav2Vec2:
         self.tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
         self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True).to(device)
 
-    def transcribe_text(self, input_fpath):
-        process_clean_all_folders()
+    def transcribe_text(self, input_fpath, temp_dir_name = temp_folder):
+        clear_files_in_folder()
 
         # audio files processing
-        load_audio_file(input_fpath, source_dir_name)
-        create_audio_chunks(source_dir_name, temp_dir_name)
+        create_audio_chunks(input_fpath)
 
         fpath_list = os.listdir(temp_dir_name)
         fpath_list_sorted = sorted(fpath_list, key=lambda x: int(os.path.splitext(x)[0].split("_")[0]))
@@ -94,7 +93,7 @@ class Wav2Vec2:
         text = " ".join(collection_of_text)
         text_dict = {"output_text": text}
 
-        with open(os.path.join(output_dir_name, "output.json"), "w") as outfile:
-            json.dump(text_dict, outfile)
+        # with open(os.path.join(output_dir_name, "output.json"), "w") as outfile:
+        #     json.dump(text_dict, outfile)
 
         return text
