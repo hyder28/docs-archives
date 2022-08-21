@@ -4,17 +4,19 @@ import json
 import logging
 import warnings
 
+#todo: expose as an api
+#todo: create python script to download pre-trained models
+print(os.getcwd())
 warnings.filterwarnings("ignore")
 logging.basicConfig(filename="app.log", level=logging.INFO)
 
 # input file directories
-input_audio_dir = "data/audio"
-input_text_dir = "data/text/test_texts.txt"
+input_audio_dir = "/Users/hyderali/Documents/data/docs-archives/audio"
+input_text_dir = "/Users/hyderali/Documents/data/docs-archives/text/test_texts.txt"
 
 # initialize models
 wav2vec2_model = Wav2Vec2()
 spacy_model = SpacySM()
-
 
 """
 1. wav2vec2 model - transcribe audio
