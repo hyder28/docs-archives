@@ -13,7 +13,7 @@ import pysbd
 
 import collections
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class SpacySM:
@@ -49,7 +49,7 @@ class SpacySM:
 
             return {"ARTICLE_TOPIC": str(ctr), "ARTICLE_TEXT": text_content}
         except Exception as e:
-            logging.error(f"> error in text topic extraction {f_path}: {e}")
+            logging.error(f"> error in text topic extraction: {e}")
             return {}
 
 
@@ -58,7 +58,7 @@ class Wav2Vec2:
 
     def __init__(self):
         self.tokenizer = Wav2Vec2Tokenizer.from_pretrained(wav2vec2_model_dir, local_files_only=True)
-        self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True).to(device)
+        self.model = Wav2Vec2ForCTC.from_pretrained(wav2vec2_model_dir, local_files_only=True).to(torch_device)
 
     def transcribe_text(self, input_fpath, temp_dir_name = temp_folder):
         clear_files_in_folder()
@@ -74,7 +74,7 @@ class Wav2Vec2:
         for f_path in fpath_list_sorted:
             try:
                 speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr=16000)
-                input_values = self.tokenizer(speech, return_tensors='pt', device=device).input_values
+                input_values = self.tokenizer(speech, return_tensors='pt', device=torch_device).input_values
 
                 with torch.no_grad():
                     logits = self.model(input_values).logits
