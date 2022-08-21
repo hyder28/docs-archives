@@ -9,7 +9,7 @@ logging.basicConfig(filename="app.log", level=logging.INFO)
 
 # input file directories
 input_audio_dir = "data/audio"
-input_text_dir = "data/text"
+input_text_dir = "data/text/test_texts.txt"
 
 # initialize models
 wav2vec2_model = Wav2Vec2()
