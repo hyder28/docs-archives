@@ -90,9 +90,69 @@ class Wav2Vec2:
                 logging.error(f"> error in transcribing {f_path}")
 
         text = " ".join(collection_of_text)
-        text_dict = {"output_text": text}
 
-        # with open(os.path.join(output_dir_name, "output.json"), "w") as outfile:
-        #     json.dump(text_dict, outfile)
+        return text
+
+    def transcribe_text_from_file(self, input_file, input_fname, max_length = 30 * 1000, temp_dir_name = temp_folder):
+        # clear files in temp directory
+        clear_files_in_folder()
+
+        # load audio file
+        sound = None
+        if input_fname.endswith('.mp3') or input_fname.endswith('.MP3'):
+            sound = AudioSegment.from_mp3(input_file)
+        elif input_fname.endswith('.wav') or input_fname.endswith('.WAV'):
+            sound = AudioSegment.from_wav(input_file)
+        elif input_fname.endswith('.ogg'):
+            sound = AudioSegment.from_ogg(input_file)
+        elif input_fname.endswith('.flac'):
+            sound = AudioSegment.from_file(input_file, "flac")
+        elif input_fname.endswith('.3gp'):
+            sound = AudioSegment.from_file(input_file, "3gp")
+        elif input_fname.endswith('.3g'):
+            sound = AudioSegment.from_file(input_file, "3gp")
+
+        # clean audio
+        sound = low_pass_filter(sound, 300)
+        sound = sound.set_frame_rate(16000)
+
+        # create audio chunks
+        audio_chunks = []
+        for chunk in split_on_silence(sound, min_silence_len=500, silence_thresh=sound.dBFS - 14, keep_silence=500):
+            if len(chunk) < max_length:
+                audio_chunks.append(chunk)
+            else:
+                audio_chunks += make_chunks(chunk, max_length)
+
+        for count, chunk in enumerate(audio_chunks):
+            output_fpath = os.path.join(temp_dir_name, f"{count}_audio_file.wav")
+            with open(output_fpath, "wb") as out_f:
+                chunk.export(out_f, format="wav")
+
+        fpath_list = os.listdir(temp_dir_name)
+        fpath_list_sorted = sorted(fpath_list, key=lambda x: int(os.path.splitext(x)[0].split("_")[0]))
+
+        # transcribe texts
+        collection_of_text = []
+
+        for f_path in fpath_list_sorted:
+            try:
+                speech, rate = librosa.load(os.path.join(temp_dir_name, f_path), sr=16000)
+                input_values = self.tokenizer(speech, return_tensors='pt', device=torch_device).input_values
+
+                with torch.no_grad():
+                    logits = self.model(input_values).logits
+
+                predicted_ids = torch.argmax(logits, dim=-1)
+                transcription = self.tokenizer.batch_decode(predicted_ids)[0]
+                transcription = transcription.lower()
+                #todo - remove print statement
+                print(f"transcription: {transcription}")
+
+                collection_of_text.append(transcription)
+            except Exception as e:
+                logging.error(f"> error in transcribing {f_path}")
+
+        text = " ".join(collection_of_text)
 
         return text
