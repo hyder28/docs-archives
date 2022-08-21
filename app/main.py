@@ -1,4 +1,4 @@
-from utils import Wav2Vec2, SpacySM
+from app.utils import Wav2Vec2, SpacySM
 import os
 import json
 import logging
@@ -15,7 +15,7 @@ spacy, transformers, librosa
 """
 1. wav2vec2 model - transcribe audio
 """
-input_data_dir = "data/audio"
+input_data_dir = "/Users/hyderali/PycharmProjects/docs-archives/data/audio"
 result_audio = dict()
 for file in os.listdir(input_data_dir):
     input_fpath = os.path.join(input_data_dir, file)

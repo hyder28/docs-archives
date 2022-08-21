@@ -1,4 +1,4 @@
-from utils.constants import keywords_lookup
+from .constants import keywords_lookup
 import collections
 
 import logging

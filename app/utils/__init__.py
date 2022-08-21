@@ -12,7 +12,6 @@ from spacy.matcher import PhraseMatcher
 import pysbd
 
 import collections
-import json
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
