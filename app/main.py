@@ -11,11 +11,11 @@ logging.basicConfig(filename="app.log", level=logging.INFO)
 Packages:
 spacy, transformers, librosa
 """
-
+print(os.getcwd())
 """
 1. wav2vec2 model - transcribe audio
 """
-input_data_dir = "/Users/hyderali/PycharmProjects/docs-archives/data/audio"
+input_data_dir = "data/audio"
 result_audio = dict()
 for file in os.listdir(input_data_dir):
     input_fpath = os.path.join(input_data_dir, file)
