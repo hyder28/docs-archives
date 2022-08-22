@@ -3,7 +3,7 @@ from typing import Union
 from pydantic import BaseModel
 
 import uvicorn
-from app.utils import *
+from utils import *
 
 app = FastAPI()
 
@@ -46,6 +46,8 @@ async def get_audio_topic(audio_file: Union[UploadFile, None] = None) -> dict:
 
     return transcribed_text
 
+# if __name__ == "__main__":
+#     uvicorn.run(app, port=5000)
 
-if __name__ == "__main__":
-    uvicorn.run(app, port=5000)
+## cli
+# uvicorn main:app --host="0.0.0.0" --port=80
